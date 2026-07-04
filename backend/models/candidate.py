@@ -14,12 +14,13 @@ class Candidate(Base):
     __tablename__ = "candidates"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255))
+    name: Mapped[str] = mapped_column(String(255), index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    role_applied: Mapped[str] = mapped_column(String(255))
+    role_applied: Mapped[str] = mapped_column(String(255), index=True)
     status: Mapped[str] = mapped_column(
         Enum("new", "reviewed", "hired", "rejected", name="candidate_status"),
         default="new",
+        index=True,
     )
     skills: Mapped[list] = mapped_column(JSON, default=list)
     internal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
