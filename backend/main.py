@@ -1,17 +1,8 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 
-from database import Base, engine
+import models  # noqa: F401 — ensures models are registered
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    yield
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 
 @app.get("/health")

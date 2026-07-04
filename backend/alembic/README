@@ -1,0 +1,6 @@
+Generic single-database configuration.
+
+Notes:
+Alembic is a database migration tool for SQL alchemy
+script.py.mako is the template Alembic uses to generate every new migration file.
+When you run alembic revision, Alembic renders this template to produce the new migration script in alembic/versions/
