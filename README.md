@@ -153,3 +153,9 @@ LIMIT :limit OFFSET :offset;
 ## Learning Reflection
 
 This was my first time working with FastAPI. Coming from opinionated frameworks like NestJS, FastAPI feels noticeably more barebones — there is no built-in module system, no enforced project structure, and no decorator-driven DI container. Instead, you wire everything together yourself using Python's type hints and FastAPI's `Depends()`. That freedom made it easy to adopt a clean layered architecture (routers → services → repositories), but it also meant the structure was entirely my own responsibility rather than something the framework guided me toward. Given more time, I'd explore the SSE stretch goal (`GET /candidates/{id}/stream`) using FastAPI's `StreamingResponse` paired with a lightweight pub/sub (e.g., Redis Streams or an in-process event bus) to push live score updates to connected clients without polling.
+
+
+## Debugging signal
+
+ - The issue is that the filtering is being done using python. This is highly inefficient as it's pulling all rows to memory and then looping 
+   to filter the data
