@@ -130,36 +130,26 @@ LIMIT :limit OFFSET :offset;
 
 ## Architecture Decision Record
 
-### ADR 1 — SQLite over DynamoDB for local development
+### ADR 1 — Introduced a `users` table not mentioned in the spec
 
-**Context**: Assignment allowed DynamoDB-style or SQLite. A full DynamoDB setup requires either AWS credentials or LocalStack, which adds non-trivial onboarding friction.
+**Context**: The spec described reviewer and admin roles and a scoring workflow, but defined no mechanism for persisting user identities or credentials. Without a `users` table there is no safe way to verify who is submitting a score or enforce role-based access — any client could claim any role.
 
-**Decision**: SQLite with SQLAlchemy async (`aiosqlite`). The schema uses the same relational model that would translate directly to Postgres in production.
+**Decision**: Added a `users` table (`id`, `email`, `hashed_password`, `role`, `created_at`) with a foreign key from `scores.reviewer_id → users.id`. Registration is the only way to create a user; the role is determined server-side by comparing the email against an `ADMIN_EMAIL` env var — the client never supplies it.
 
-**Trade-off**: SQLite does not support native JSON indexing or concurrent writes at scale. The `skills` column is stored as JSON, which limits query-ability. Switching to Postgres later requires only changing `DATABASE_URL`.
-
----
-
-### ADR 2 — FastAPI with async SQLAlchemy
-
-**Context**: Needed a Python API that handles concurrent requests without blocking (especially the mock 2s LLM call).
-
-**Decision**: FastAPI with `asyncio` + SQLAlchemy 2.0 async session. The `await asyncio.sleep(2)` in the summary endpoint is non-blocking — other requests are served during the delay.
-
-**Trade-off**: Async SQLAlchemy requires `aiosqlite` driver and slightly more boilerplate than sync SQLAlchemy. Synchronous libraries (e.g., bcrypt via passlib) are wrapped in thread executors automatically by FastAPI.
+**Trade-off**: This goes beyond the literal spec, but omitting it would make the RBAC requirement impossible to enforce correctly. The added surface is minimal and contained to `models/user.py`, `repositories/users.py`, and `routers/auth.py`.
 
 ---
 
-### ADR 3 — JWT role baked into token, registration hardcodes reviewer
+### ADR 2 — JWT delivered via HttpOnly cookies instead of response body
 
-**Context**: RBAC must be enforced server-side. A naive implementation might accept `role` from the registration payload.
+**Context**: The frontend needs to attach the JWT on every authenticated request. The common approach is to return the token in the response body and store it in `localStorage`, but `localStorage` is readable by any JavaScript on the page, making it vulnerable to XSS attacks.
 
-**Decision**: Registration endpoint ignores any `role` field from the client and always writes `role="reviewer"` to the database. Admins must be seeded directly in the DB. The JWT payload includes `role` for convenience but the database record is the source of truth (the token is re-verified against the DB on each request).
+**Decision**: The login endpoint sets the JWT as an `HttpOnly; SameSite=lax` cookie. The browser attaches it automatically on every same-origin request. The frontend never reads or stores the token — `credentials: 'include'` on `fetch` is all that is needed.
 
-**Trade-off**: No self-service admin promotion. Admins require a manual DB seed step — acceptable for an internal tool, unacceptable for a public SaaS.
+**Trade-off**: HttpOnly cookies cannot be read by JavaScript, which means the frontend cannot decode the token client-side to get the user's role or email. A separate `/auth/me` endpoint (or including user info in the login response body alongside the cookie) is needed to give the UI the current user's details.
 
 ---
 
 ## Learning Reflection
 
-I implemented SQLAlchemy's async session pattern with `selectinload` for eager relationship loading — something I'd previously only done synchronously. Given more time, I'd explore the SSE stretch goal (`GET /candidates/{id}/stream`) using FastAPI's `StreamingResponse` paired with a lightweight pub/sub (e.g., Redis Streams or an in-process event bus) to push live score updates to connected clients without polling.
+This was my first time working with FastAPI. Coming from opinionated frameworks like NestJS, FastAPI feels noticeably more barebones — there is no built-in module system, no enforced project structure, and no decorator-driven DI container. Instead, you wire everything together yourself using Python's type hints and FastAPI's `Depends()`. That freedom made it easy to adopt a clean layered architecture (routers → services → repositories), but it also meant the structure was entirely my own responsibility rather than something the framework guided me toward. Given more time, I'd explore the SSE stretch goal (`GET /candidates/{id}/stream`) using FastAPI's `StreamingResponse` paired with a lightweight pub/sub (e.g., Redis Streams or an in-process event bus) to push live score updates to connected clients without polling.
