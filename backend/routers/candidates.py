@@ -29,7 +29,7 @@ def list_candidates(
     skill: Annotated[str | None, Query()] = None,
     keyword: Annotated[str | None, Query()] = None,
     page: Annotated[int, Query(ge=1)] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+    page_size: Annotated[int, Query(ge=1, le=50)] = 20,
     db: Session = Depends(get_db),
     current_user: TokenData = Depends(require_reviewer),
 ):

@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
+
+interface UserResponse {
+  id: number
+  email: string
+  role: 'admin' | 'reviewer'
+}
 
 export function LoginForm() {
   const { login } = useAuth()
@@ -17,24 +24,14 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const user = await apiFetch<UserResponse>('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ email, password }),
       })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setError(data.detail ?? 'Invalid email or password')
-        return
-      }
-
-      const user = await res.json()
       login(user)
-      navigate('/', { replace: true })
-    } catch {
-      setError('Unable to reach the server. Please try again.')
+      navigate('/candidates', { replace: true })
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Invalid email or password')
     } finally {
       setLoading(false)
     }
