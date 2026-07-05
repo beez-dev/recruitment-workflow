@@ -17,7 +17,7 @@ class Score(Base):
     candidate_id: Mapped[int] = mapped_column(ForeignKey("candidates.id"), index=True)
     category: Mapped[str] = mapped_column(String(255))
     score: Mapped[int] = mapped_column(Integer)
-    reviewer_id: Mapped[int] = mapped_column(Integer)
+    reviewer_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

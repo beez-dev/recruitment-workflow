@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 
 import models  # noqa: F401 — registers all ORM models
-from routers import candidates
+from routers import auth, candidates
 
 app = FastAPI()
 
+app.include_router(auth.router)
 app.include_router(candidates.router)
 
 

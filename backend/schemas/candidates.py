@@ -14,3 +14,7 @@ class CandidateResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CandidateAdminResponse(CandidateResponse):
+    internal_notes: str | None
