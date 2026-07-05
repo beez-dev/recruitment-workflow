@@ -1,5 +1,11 @@
 import { apiFetch } from './client'
-import type { CandidateFilters, CandidateListResponse } from '../types/candidate'
+import type {
+  CandidateDetail,
+  CandidateFilters,
+  CandidateListResponse,
+  Score,
+  ScoreRequest,
+} from '../types/candidate'
 
 export function fetchCandidates(
   filters: CandidateFilters,
@@ -15,4 +21,19 @@ export function fetchCandidates(
   params.set('page_size', String(pageSize))
 
   return apiFetch<CandidateListResponse>(`/candidates?${params}`)
+}
+
+export function fetchCandidate(id: number): Promise<CandidateDetail> {
+  return apiFetch<CandidateDetail>(`/candidates/${id}`)
+}
+
+export function submitScore(id: number, data: ScoreRequest): Promise<Score> {
+  return apiFetch<Score>(`/candidates/${id}/scores`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function fetchSummary(id: number): Promise<{ candidate_id: number; summary: string }> {
+  return apiFetch(`/candidates/${id}/summary`, { method: 'POST' })
 }

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import type { Candidate, CandidateStatus } from '../../types/candidate'
 
 interface Props {
@@ -13,6 +14,8 @@ const STATUS_STYLES: Record<CandidateStatus, string> = {
 }
 
 export function CandidateList({ candidates, loading }: Props) {
+  const navigate = useNavigate()
+
   if (loading) {
     return (
       <div className="flex justify-center py-16 text-sm text-gray-400">
@@ -44,7 +47,11 @@ export function CandidateList({ candidates, loading }: Props) {
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
           {candidates.map((c) => (
-            <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+            <tr
+              key={c.id}
+              onClick={() => navigate(`/candidates/${c.id}`)}
+              className="hover:bg-gray-50 transition-colors cursor-pointer"
+            >
               <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
               <td className="px-4 py-3 text-gray-600">{c.email}</td>
               <td className="px-4 py-3 text-gray-600">{c.role_applied}</td>
