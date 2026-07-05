@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr
 
+from schemas.scores import ScoreResponse
+
 
 class CandidateResponse(BaseModel):
     id: int
@@ -18,3 +20,18 @@ class CandidateResponse(BaseModel):
 
 class CandidateAdminResponse(CandidateResponse):
     internal_notes: str | None
+
+
+class CandidateDetailResponse(CandidateResponse):
+    scores: list[ScoreResponse]
+
+
+class CandidateAdminDetailResponse(CandidateAdminResponse):
+    scores: list[ScoreResponse]
+
+
+class CandidateListResponse(BaseModel):
+    items: list[CandidateResponse]
+    total: int
+    page: int
+    page_size: int
